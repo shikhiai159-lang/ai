@@ -1,0 +1,9 @@
+{
+  "name": "ai-studio-app",
+  "version": "1.0.0",
+  "description": "Universal AI & Video Generation Studio Native Mobile App",
+  "main": "index.js",
+  "scripts": { "start": "npx capacitor run android" },
+  "dependencies": { "@capacitor/android": "^6.0.0", "@capacitor/core": "^6.0.0" },
+  "devDependencies": { "@capacitor/cli": "^6.0.0" }
+}
