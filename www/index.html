@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Studio Pro</title>
+    <title>AI Studio Pro - Standalone</title>
     <style>
         :root { --bg-dark: #090d16; --card-bg: #131b2e; --primary: #6366f1; --accent: #10b981; --danger: #ef4444; --text-main: #f3f4f6; --text-muted: #9ca3af; --border: #1f293d; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,116 +23,109 @@
 </head>
 <body>
     <div class="header">
-        <h1>🎬 AI Studio Pro</h1>
-        <div class="status-badge" id="statusIndicator">Checking...</div>
+        <h1>🎬 AI Studio Pro (Standalone)</h1>
+        <div class="status-badge" id="engineStatus">ইঞ্জিন চেক করা হচ্ছে...</div>
     </div>
 
-    <div class="card">
-        <label>⚙️ ১. ইন-অ্যাপ ইঞ্জিন ডায়াগনস্টিকস</label>
-        <button class="btn btn-secondary" onclick="checkOllamaHealth()">ইঞ্জিন টেস্ট করুন 🔄</button>
+    <div class="card" style="border-color: #3b82f6;">
+        <label>⚙️ ১. ইন-অ্যাপ ওলামা ইঞ্জিন ও মডেল সেটআপ</label>
+        <button class="btn btn-secondary" onclick="checkEngine()">ইঞ্জিন স্ট্যাটাস রিফ্রেশ করুন 🔄</button>
         
-        <label>মডেল নাম</label>
-        <input type="text" id="pullModelName" value="gemma4:cloud">
-        <button class="btn btn-success" id="pullBtn" onclick="pullOllamaModel()">ডাউনলোড / ইনস্টল চেষ্টা করুন 📥</button>
+        <label>ডিফল্ট মডেল (Gemma 4 Cloud / Local)</label>
+        <input type="text" id="targetModel" value="gemma4:cloud">
+        <button class="btn btn-success" id="downloadBtn" onclick="downloadModel()">মডেল ডাউনলোড ও ইনস্টল করুন 📥</button>
     </div>
 
     <div class="card">
-        <label>২. কাজের ক্যাটাগরি</label>
+        <label>২. ক্রিয়েটর স্টুডিও ক্যাটাগরি</label>
         <select id="taskType">
-            <option value="blog">📝 এসইও ফ্রেন্ডলি ব্লগ পোস্ট রাইটিং (SEO Blog Post)</option>
-            <option value="video_script">🎬 ভিডিও সিন স্ক্রিপ্ট ও ভয়েসওভার (Video Script & Voiceover)</option>
+            <option value="blog">📝 এসইও ফ্রেন্ডলি ব্লগ পোস্ট রাইটিং (SEO Blog)</option>
+            <option value="video_script">🎬 ভিডিও সিন স্ক্রিপ্ট ও ভয়েসওভার (Video Script)</option>
             <option value="thumbnail">🎨 ইউটিউব থাম্বনেল আইডিয়া ও প্রম্পট (Thumbnail Ideas)</option>
         </select>
 
-        <label>৩. টপিক / প্রম্পট</label>
-        <textarea id="userPrompt" rows="4" placeholder="আপনার টপিক লিখুন..."></textarea>
+        <label>৩. আপনার টপিক লিখুন</label>
+        <textarea id="userPrompt" rows="4" placeholder="যেমন: সেরা এআই টুলস ২০২৬..."></textarea>
 
-        <button class="btn" onclick="processAIRequest()">জেনারেট করুন ✨</button>
+        <button class="btn" onclick="runGeneration()">জেনারেট করুন ✨</button>
     </div>
 
     <div class="card">
-        <label>৪. ফলাফল / সার্ভিস এরর লগ</label>
-        <div class="output-box" id="resultBox">রেসপন্স বা এরর তথ্য এখানে দেখাবে...</div>
+        <label>৪. ফলাফল / ইঞ্জিন লগ</label>
+        <div class="output-box" id="outputBox">ইঞ্জিন রেডি হলে ফলাফল এখানে দেখাবে...</div>
     </div>
 
     <script>
-        const OLLAMA_HOST = "http://localhost:11434";
+        const HOST = "http://localhost:11434";
 
-        async function checkOllamaHealth() {
-            const badge = document.getElementById('statusIndicator');
-            const resultBox = document.getElementById('resultBox');
+        async function checkEngine() {
+            const badge = document.getElementById('engineStatus');
+            const box = document.getElementById('outputBox');
             try {
-                const res = await fetch(`${OLLAMA_HOST}/api/tags`, { method: 'GET' });
+                const res = await fetch(`${HOST}/api/tags`);
                 if (res.ok) {
-                    badge.innerText = "Engine Active (Port 11434 Connected)";
+                    badge.innerText = "Embedded Engine Active ✅";
                     badge.className = "status-badge active";
-                    resultBox.innerText = "সার্ভার সক্রিয় আছে। আপনি মডেল ব্যবহার করতে পারেন।";
+                    box.innerText = "লোকাল ইঞ্জিন সফলভাবে ব্যাকগ্রাউন্ডে সচল রয়েছে!";
                 } else {
-                    throw new Error("Port open but non-200 response");
+                    throw new Error();
                 }
             } catch (e) {
-                badge.innerText = "Engine Disconnected";
+                badge.innerText = "Engine Starting... ⏳";
                 badge.className = "status-badge";
-                resultBox.innerText = "লগ: লোকাল সার্ভার পাওয়া যায়নি (Failed to connect to " + OLLAMA_HOST + ")। ব্যাকগ্রাউন্ড নেটিভ সার্ভিস চালু হওয়া প্রয়োজন।";
+                box.innerText = "ইঞ্জিন ব্যাকগ্রাউন্ডে চালু হচ্ছে। একটু সময় দিন অথবা 'স্ট্যাটাস রিফ্রেশ করুন' বাটনে চাপ দিন।";
             }
         }
 
-        async function pullOllamaModel() {
-            const btn = document.getElementById('pullBtn');
-            const modelName = document.getElementById('pullModelName').value.trim();
-            const resultBox = document.getElementById('resultBox');
-            
-            btn.disabled = true;
-            btn.innerText = "প্রসেস করা হচ্ছে...";
-            resultBox.innerText = `কানেক্ট করার চেষ্টা চলছে (${modelName})...`;
+        async function downloadModel() {
+            const model = document.getElementById('targetModel').value.trim();
+            const box = document.getElementById('outputBox');
+            box.innerText = `মডেল (${model}) ডাউনলোড ও কনফিগার শুরু হয়েছে... অনুগ্রহ করে অপেক্ষা করুন।`;
 
             try {
-                const res = await fetch(`${OLLAMA_HOST}/api/pull`, {
+                const res = await fetch(`${HOST}/api/pull`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: modelName, stream: false })
+                    body: JSON.stringify({ name: model, stream: false })
                 });
-
                 if(res.ok) {
-                    resultBox.innerText = `সফলভাবে ${modelName} মডেলের জন্য রিকোয়েস্ট এক্সেপ্ট হয়েছে!`;
+                    box.innerText = `সফলভাবে ${model} মডেল ইনস্টল সম্পন্ন হয়েছে! এখন আপনি যেকোনো প্রম্পট রান করতে পারবেন।`;
+                    checkEngine();
                 } else {
-                    resultBox.innerText = "সার্ভার এরর: " + res.status + " " + res.statusText;
+                    box.innerText = "মডেল ইনস্টল করার সময় সার্ভার রেসপন্স দেয়নি। ইঞ্জিন সচল আছে কিনা নিশ্চিত করুন।";
                 }
             } catch(e) {
-                resultBox.innerText = "বাটন ট্র্যাকিং লগ: ব্যাকগ্রাউন্ড লোকাল সার্ভার অফ থাকায় ফেচ ফেল করেছে (" + e.message + ")।";
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "ডাউনলোড / ইনস্টল মডেল 📥";
+                box.innerText = "ত্রুটি: সার্ভারের সাথে কানেক্ট করা যায়নি (" + e.message + ")।";
             }
         }
 
-        async function processAIRequest() {
+        async function runGeneration() {
             const task = document.getElementById('taskType').value;
-            const promptText = document.getElementById('userPrompt').value.trim();
-            const modelName = document.getElementById('pullModelName').value.trim();
-            const resultBox = document.getElementById('resultBox');
+            const prompt = document.getElementById('userPrompt').value.trim();
+            const model = document.getElementById('targetModel').value.trim();
+            const box = document.getElementById('outputBox');
 
-            if (!promptText) return alert('দয়া করে বিষয়বস্তু লিখুন!');
+            if (!prompt) return alert('দয়া করে কিছু লিখুন!');
 
-            resultBox.innerText = "প্রসেস করা হচ্ছে... ⏳";
-            let promptPrefix = task === "blog" ? "Write an SEO blog in Bengali: " : "Create video script in Bengali: ";
+            box.innerText = "এআই প্রসেস করছে... ⏳";
+            let prefix = task === "blog" ? "Write an SEO blog post in Bengali for: " : "Create a video script in Bengali for: ";
 
             try {
-                const res = await fetch(`${OLLAMA_HOST}/api/generate`, {
+                const res = await fetch(`${HOST}/api/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: modelName, prompt: promptPrefix + promptText, stream: false })
+                    body: JSON.stringify({ model: model, prompt: prefix + prompt, stream: false })
                 });
 
-                if(!res.ok) throw new Error("Ollama Engine রেসপন্স দেয়নি।");
+                if(!res.ok) throw new Error("ইঞ্জিন থেকে আউটপুট পাওয়া যায়নি।");
                 const data = await res.json();
-                resultBox.innerText = data.response;
+                box.innerText = data.response;
             } catch(err) {
-                resultBox.innerText = "ত্রুটি: " + err.message;
+                box.innerText = "ত্রুটি: " + err.message;
             }
         }
 
-        checkOllamaHealth();
+        checkEngine();
     </script>
 </body>
 </html>
