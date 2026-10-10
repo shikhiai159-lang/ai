@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Studio Pro - All-in-One Creator Studio</title>
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --card-bg: #131b2e;
+            --primary: #6366f1;
+            --accent: #10b981;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: #1f293d;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-dark); color: var(--text-main); padding: 16px; padding-bottom: 40px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+        .header h1 { font-size: 18px; font-weight: 700; color: #fff; }
+        .status-badge { font-size: 11px; background: rgba(16, 185, 129, 0.15); color: var(--accent); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
+        select, input, textarea { width: 100%; background: #0d1322; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; font-size: 14px; margin-bottom: 14px; outline: none; }
+        select:focus, input:focus, textarea:focus { border-color: var(--primary); }
+        .btn { background: var(--primary); color: #fff; border: none; width: 100%; padding: 14px; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-secondary { background: #1e293b; border: 1px solid var(--border); margin-top: 10px; }
+        .output-box { background: #070a10; border: 1px solid var(--border); border-radius: 8px; padding: 14px; min-height: 140px; white-space: pre-wrap; font-size: 14px; line-height: 1.6; margin-top: 10px; word-break: break-word; }
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎬 AI Studio Pro</h1>
+        <div class="status-badge" id="statusIndicator">gemma4:cloud Active</div>
+    </div>
+
+    <div class="card">
+        <label>১. এআই ইঞ্জিন ও মডেল কনফিগারেশন</label>
+        <select id="providerSelect" onchange="toggleProviderSettings()">
+            <option value="ollama">Local Ollama (gemma4:cloud / Zero-Termux)</option>
+            <option value="gemini">Google Gemini Cloud API</option>
+            <option value="custom">Custom API Endpoint / OpenClaw</option>
+        </select>
+
+        <div id="ollamaConfig">
+            <div class="settings-grid">
+                <div>
+                    <label>সার্ভার ইউআরএল</label>
+                    <input type="text" id="ollamaUrl" value="http://localhost:11434">
+                </div>
+                <div>
+                    <label>মডেল নাম</label>
+                    <input type="text" id="ollamaModel" value="gemma4:cloud">
+                </div>
+            </div>
+        </div>
+
+        <div id="geminiConfig" style="display: none;">
+            <label>Gemini API Key</label>
+            <input type="password" id="geminiKey" placeholder="AIzaSy...">
+        </div>
+
+        <div id="customConfig" style="display: none;">
+            <label>Custom API URL / Token</label>
+            <input type="text" id="customUrl" placeholder="https://api.example.com/v1">
+        </div>
+    </div>
+
+    <div class="card">
+        <label>২. কাজের ক্যাটাগরি সিলেক্ট করুন</label>
+        <select id="taskType">
+            <option value="blog">📝 এসইও ফ্রেন্ডলি ব্লগ পোস্ট রাইটিং (SEO Blog Post)</option>
+            <option value="video_script">🎬 ভিডিও সিন স্ক্রিপ্ট ও ভয়েসওভার (Video Script & Voiceover)</option>
+            <option value="thumbnail">🎨 ইউটিউব থাম্বনেল আইডিয়া ও প্রম্পট (Thumbnail Ideas)</option>
+            <option value="social">📲 সোশ্যাল মিডিয়া পোস্ট ও হ্যাশট্যাগ (Social Media & Captions)</option>
+            <option value="seo">🔍 এসইও মেটা টাইটেল ও ডেসক্রিপশন (SEO Meta Generator)</option>
+        </select>
+
+        <label>৩. আপনার বিষয়বস্তু বা টপিক লিখুন</label>
+        <textarea id="userPrompt" rows="4" placeholder="যেমন: এআই দিয়ে ঘরে বসে অনলাইন ইনকাম করার উপায়..."></textarea>
+
+        <button class="btn" onclick="processAIRequest()">জেনারেট করুন ✨</button>
+    </div>
+
+    <div class="card">
+        <label>৪. ফলাফল (Generated Output)</label>
+        <div class="output-box" id="resultBox">আপনার বিষয় লিখে 'জেনারেট করুন' বাটনে চাপ দিন...</div>
+        <button class="btn btn-secondary" onclick="copyOutput()">কপি করুন 📋</button>
+    </div>
+
+    <script>
+        function toggleProviderSettings() {
+            const provider = document.getElementById('providerSelect').value;
+            document.getElementById('ollamaConfig').style.display = provider === 'ollama' ? 'block' : 'none';
+            document.getElementById('geminiConfig').style.display = provider === 'gemini' ? 'block' : 'none';
+            document.getElementById('customConfig').style.display = provider === 'custom' ? 'block' : 'none';
+            
+            const badge = document.getElementById('statusIndicator');
+            if(provider === 'ollama') badge.innerText = 'gemma4:cloud Active';
+            else if(provider === 'gemini') badge.innerText = 'Gemini API Active';
+            else badge.innerText = 'Custom Endpoint Active';
+        }
+
+        async function processAIRequest() {
+            const provider = document.getElementById('providerSelect').value;
+            const task = document.getElementById('taskType').value;
+            const promptText = document.getElementById('userPrompt').value.trim();
+            const resultBox = document.getElementById('resultBox');
+
+            if (!promptText) {
+                alert('দয়া করে কোনো টপিক বা বিষয় লিখুন!');
+                return;
+            }
+
+            resultBox.innerText = "এআই কাজ করছে... অনুগ্রহ করে অপেক্ষা করুন ⏳";
+
+            let systemInstruction = "";
+            if (task === "blog") systemInstruction = "Write a comprehensive, professional, SEO-friendly blog post with proper headings and paragraphs in Bengali based on this topic: ";
+            else if (task === "video_script") systemInstruction = "Create a detailed scene-by-scene video script with visual prompts, camera angles, and voiceover text in Bengali for: ";
+            else if (task === "thumbnail") systemInstruction = "Generate 3 high-CTR YouTube thumbnail design concepts, text ideas, and visual prompts in Bengali for: ";
+            else if (task === "social") systemInstruction = "Write engaging social media posts with catchy captions and hashtags in Bengali for: ";
+            else systemInstruction = "Generate high-ranking SEO Meta Titles and Meta Descriptions in Bengali for: ";
+
+            const finalPrompt = systemInstruction + promptText;
+
+            try {
+                if (provider === 'ollama') {
+                    const url = document.getElementById('ollamaUrl').value.trim();
+                    const model = document.getElementById('ollamaModel').value.trim();
+
+                    const res = await fetch(`${url}/api/generate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ model: model, prompt: finalPrompt, stream: false })
+                    });
+                    if (!res.ok) throw new Error("Ollama সার্ভার কানেক্ট হতে পারেনি।");
+                    const data = await res.json();
+                    resultBox.innerText = data.response;
+                } else if (provider === 'gemini') {
+                    const apiKey = document.getElementById('geminiKey').value.trim();
+                    if (!apiKey) { alert('Gemini API Key দিন!'); return; }
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: finalPrompt }] }] })
+                    });
+                    const data = await res.json();
+                    resultBox.innerText = data.candidates[0].content.parts[0].text;
+                } else {
+                    resultBox.innerText = "Custom endpoint active. (Ready for custom integration)";
+                }
+            } catch (err) {
+                resultBox.innerText = "ত্রুটি ঘটেছে: " + err.message;
+            }
+        }
+
+        function copyOutput() {
+            const text = document.getElementById('resultBox').innerText;
+            navigator.clipboard.writeText(text);
+            alert('কপি করা হয়েছে!');
+        }
+    </script>
+</body>
+</html>
