@@ -1,0 +1,5 @@
+STATUS: RECONSTRUCTED SOURCE SCAFFOLD — NOT A VERIFIED BUILD
+
+The HTML UI was extracted from the supplied APK. Original Android source was not provided and cannot be fully reconstructed from the APK alone.
+The native Ollama service is a scaffold only. No Android-compatible Ollama runtime/binaries are included, so this bundle does not yet run Ollama inside the APK.
+Do not describe this bundle as a finished standalone Ollama APK.

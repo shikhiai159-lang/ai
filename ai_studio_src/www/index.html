@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Studio Pro - Real Engine</title>
+    <style>
+        :root { --bg-dark: #090d16; --card-bg: #131b2e; --primary: #6366f1; --accent: #10b981; --danger: #ef4444; --text-main: #f3f4f6; --text-muted: #9ca3af; --border: #1f293d; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-dark); color: var(--text-main); padding: 16px; padding-bottom: 50px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 14px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+        .header h1 { font-size: 17px; font-weight: 700; color: #fff; }
+        .status-badge { font-size: 11px; background: rgba(239, 68, 68, 0.15); color: var(--danger); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .status-badge.active { background: rgba(16, 185, 129, 0.15); color: var(--accent); border-color: rgba(16, 185, 129, 0.3); }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
+        select, input, textarea { width: 100%; background: #0d1322; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; outline: none; }
+        .btn { background: var(--primary); color: #fff; border: none; width: 100%; padding: 14px; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; transition: 0.1s; }
+        .btn:active { transform: scale(0.97); }
+        .btn-success { background: var(--accent); margin-top: 6px; }
+        .btn-secondary { background: #1e293b; border: 1px solid var(--border); margin-bottom: 10px; }
+        .output-box { background: #070a10; border: 1px solid var(--border); border-radius: 8px; padding: 14px; min-height: 130px; white-space: pre-wrap; font-size: 14px; line-height: 1.6; margin-top: 10px; color: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎬 AI Studio Pro (Real Local Engine)</h1>
+        <div class="status-badge" id="engineStatus">ইঞ্জিন চেক হচ্ছে...</div>
+    </div>
+
+    <!-- 1. Engine & Model Setup -->
+    <div class="card">
+        <label>⚙️ ১. লোকাল ইঞ্জিন ও মডেল ম্যানেজমেন্ট</label>
+        <button class="btn btn-secondary" onclick="checkRealEngine()">সার্ভার স্ট্যাটাস চেক করুন 🔄</button>
+        
+        <label>মডেল নাম (Model Name)</label>
+        <input type="text" id="targetModel" value="gemma4:cloud">
+        <button class="btn btn-success" id="downloadBtn" onclick="pullRealModel()">রিয়েল মডেল ডাউনলোড শুরু করুন 📥</button>
+    </div>
+
+    <!-- 2. Creator Workspace -->
+    <div class="card">
+        <label>২. ক্রিয়েটর স্টুдио ক্যাটাগরি</label>
+        <select id="taskType">
+            <option value="blog">📝 এসইও ফ্রেন্ডলি ব্লগ পোস্ট রাইটিং (SEO Blog)</option>
+            <option value="video_script">🎬 ভিডিও সিন স্ক্রিপ্ট ও ভয়েসওভার (Video Script)</option>
+            <option value="thumbnail">🎨 ইউটিউব থাম্বনেল আইডিয়া ও প্রম্পট (Thumbnail Ideas)</option>
+        </select>
+
+        <label>৩. আপনার টপিক বা বিষয় লিখুন</label>
+        <textarea id="userPrompt" rows="4" placeholder="যেমন: সেরা এআই টুলস ২০২৬..."></textarea>
+
+        <button class="btn" onclick="generateRealAI()">রিয়েল জেনারেট করুন ✨</button>
+    </div>
+
+    <!-- 3. Output -->
+    <div class="card">
+        <label>৪. রিয়েল এআই আউটপুট</label>
+        <div class="output-box" id="outputBox">লোকাল ইঞ্জিন থেকে আসল আউটপুট এখানে দেখাবে...</div>
+        <button class="btn btn-secondary" style="margin-top: 12px;" onclick="copyResultText()">কপি করুন 📋</button>
+    </div>
+
+    <script>
+        const HOST = "http://localhost:11434";
+
+        async function checkRealEngine() {
+            const badge = document.getElementById('engineStatus');
+            const box = document.getElementById('outputBox');
+            badge.innerText = "Checking...";
+            
+            try {
+                const res = await fetch(`${HOST}/api/tags`);
+                if (res.ok) {
+                    badge.innerText = "Real Engine Active ✅";
+                    badge.className = "status-badge active";
+                    box.innerText = "লোকাল অলামা সার্ভার ১০০% সক্রিয় রয়েছে। আপনি এখন রিয়েল জেনারেট করতে পারেন।";
+                } else {
+                    throw new Error("Server offline");
+                }
+            } catch (e) {
+                badge.innerText = "Engine Starting... ⏳";
+                badge.className = "status-badge";
+                box.innerText = "সার্ভার ব্যাকগ্রাউন্ডে চালু হচ্ছে। একটু অপেক্ষা করুন অথবা 'সার্ভার স্ট্যাটাস চেক করুন' বাটনে চাপ দিন।";
+            }
+        }
+
+        async function pullRealModel() {
+            const model = document.getElementById('targetModel').value.trim();
+            const box = document.getElementById('outputBox');
+            const btn = document.getElementById('downloadBtn');
+
+            if (!model) return alert("দয়া করে মডেলের নাম দিন!");
+
+            btn.disabled = true;
+            btn.innerText = "ডাউনলোড চলছে...";
+            box.innerText = `রিয়েল মডেল (${model}) ডাউনলোড শুরু হয়েছে... নেটওয়ার্ক স্পিড অনুযায়ী কিছুটা সময় নিতে পারে।`;
+
+            try {
+                const res = await fetch(`${HOST}/api/pull`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: model, stream: false })
+                });
+
+                if (res.ok) {
+                    box.innerText = `সফল! ${model} মডেলটি সফলভাবে ডাউনলোড ও ইনস্টল সম্পন্ন হয়েছে।`;
+                    checkRealEngine();
+                } else {
+                    box.innerText = "মডেল ডাউনলোড করতে সমস্যা হয়েছে। সার্ভার চালু আছে কিনা চেক করুন।";
+                }
+            } catch (err) {
+                box.innerText = "ত্রুটি: লোকাল সার্ভার থেকে রেসপন্স পাওয়া যায়নি (" + err.message + ")।";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "রিয়েল মডেল ডাউনলোড শুরু করুন 📥";
+            }
+        }
+
+        async function generateRealAI() {
+            const task = document.getElementById('taskType').value;
+            const prompt = document.getElementById('userPrompt').value.trim();
+            const model = document.getElementById('targetModel').value.trim();
+            const box = document.getElementById('outputBox');
+
+            if (!prompt) return alert('দয়া করে কিছু লিখুন!');
+
+            box.innerText = "রিয়েল এআই প্রসেস করছে... অনুগ্রহ করে অপেক্ষা করুন ⏳";
+
+            let systemPrompt = "";
+            if (task === "blog") systemPrompt = "Write a comprehensive, professional, SEO-friendly blog post in Bengali based on: ";
+            else if (task === "video_script") systemPrompt = "Create a detailed scene-by-scene video script in Bengali for: ";
+            else systemPrompt = "Generate high-CTR YouTube thumbnail ideas and prompts in Bengali for: ";
+
+            try {
+                const res = await fetch(`${HOST}/api/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        model: model, 
+                        prompt: systemPrompt + prompt, 
+                        stream: false 
+                    })
+                });
+
+                if (!res.ok) throw new Error("লোকাল ইঞ্জিন রিকোয়েস্ট এক্সেপ্ট করেনি।");
+                
+                const data = await res.json();
+                if(data.response) {
+                    box.innerText = data.response;
+                } else {
+                    box.innerText = "সার্ভার থেকে খালি রেসপন্স এসেছে।";
+                }
+            } catch (err) {
+                box.innerText = "রিয়েল জেনারেশন ত্রুটি: " + err.message + "\n\n(দয়া করে নিশ্চিত করুন যে লোকাল সার্ভার চালু আছে এবং মডেল ডাউনলোড করা হয়েছে।)";
+            }
+        }
+
+        function copyResultText() {
+            const text = document.getElementById('outputBox').innerText;
+            navigator.clipboard.writeText(text);
+            alert('আউটপুট ক্লিপবোর্ডে কপি করা হয়েছে!');
+        }
+
+        checkRealEngine();
+    </script>
+</body>
+</html>
