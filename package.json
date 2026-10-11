@@ -1,9 +1,17 @@
 {
-  "name": "ai-studio-app",
+  "name": "ai-studio-pro-reconstructed",
   "version": "1.0.0",
-  "description": "Universal AI & Video Generation Studio Native Mobile App",
-  "main": "index.js",
-  "scripts": { "start": "npx capacitor run android" },
-  "dependencies": { "@capacitor/android": "^6.0.0", "@capacitor/core": "^6.0.0" },
-  "devDependencies": { "@capacitor/cli": "^6.0.0" }
+  "private": true,
+  "description": "Reconstructed source scaffold for AI Video Studio Pro",
+  "scripts": {
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "6.2.1",
+    "@capacitor/core": "6.2.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "6.2.1"
+  }
 }
